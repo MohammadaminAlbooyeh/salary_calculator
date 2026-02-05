@@ -70,6 +70,36 @@ st.markdown("""
         overflow: hidden;
         background-color: #1e1e1e;
         color: #ffffff;
+        border: 1px solid #333333;
+    }
+    .stDataFrame table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .stDataFrame th {
+        background-color: #333333;
+        color: #ffffff;
+        padding: 12px;
+        text-align: left;
+        font-weight: bold;
+    }
+    .stDataFrame td {
+        padding: 12px;
+        border-bottom: 1px solid #333333;
+    }
+    .stDataFrame tr:nth-child(even) {
+        background-color: #2a2a2a;
+    }
+    .stDataFrame tr:hover {
+        background-color: #3a3a3a;
+    }
+    .stContainer {
+        background-color: #1a1a1a;
+        border: 1px solid #333333;
+        border-radius: 15px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .stProgress > div > div > div {
         background-color: #ff6b6b;
@@ -91,7 +121,12 @@ st.markdown("""
 
 st.title("💶 Salary Calculator (Italy-2025)")
 st.markdown(
-    "Estimate your **Net Take-Home Pay** based on current Italian tax brackets and social security rates."
+    """
+    <div style="text-align: center; color: #cccccc; font-size: 16px; margin-bottom: 30px;">
+    Estimate your **Net Take-Home Pay** based on current Italian tax brackets and social security rates for 2025.
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 # Sidebar inputs for cleaner layout
@@ -113,18 +148,19 @@ if submitted or 'initialized' not in st.session_state:
     result = compute_net_from_gross(gross, social_rate, regional_rate, municipal_rate)
     monthly = {k: (v / months if isinstance(v, (int, float)) else v) for k, v in result.items()}
 
-    # Top metrics in a nice card-like layout
-    st.write("### 📊 Summary")
-    mcol1, mcol2, mcol3, mcol4 = st.columns(4)
-    mcol1.metric("Annual Gross", f"€{result['gross']:,.0f}")
-    mcol2.metric("Annual Net", f"€{result['net']:,.0f}")
-    mcol3.metric(f"Monthly Net ({months}x)", f"€{monthly['net']:,.0f}")
-    mcol4.metric("Total Tax", f"€{result['total_tax']:,.0f}", delta=f"{(result['total_tax']/gross*100):.1f}%", delta_color="inverse")
+    # Results container
+    with st.container():
+        st.markdown("### 📊 Summary")
+        mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+        mcol1.metric("Annual Gross", f"€{result['gross']:,.0f}")
+        mcol2.metric("Annual Net", f"€{result['net']:,.0f}")
+        mcol3.metric(f"Monthly Net ({months}x)", f"€{monthly['net']:,.0f}")
+        mcol4.metric("Total Tax", f"€{result['total_tax']:,.0f}", delta=f"{(result['total_tax']/gross*100):.1f}%", delta_color="inverse")
 
-    st.divider()
+        st.divider()
 
-    # Detailed table (year + month grouped)
-    st.subheader("📋 Detailed Breakdown")
+        # Detailed table (year + month grouped)
+        st.subheader("📋 Detailed Breakdown")
     
     breakdown_data = {
         "Category": ["Gross Salary", "Social Contributions (INPS)", "Taxable Income", "IRPEF (Income Tax)", "Regional/Municipal Tax", "Total Taxes", "Net Salary"],
@@ -143,7 +179,7 @@ if submitted or 'initialized' not in st.session_state:
         df_breakdown[col] = df_breakdown[col].apply(lambda x: f"€ {x:,.2f}")
 
     st.dataframe(df_breakdown, use_container_width=True, hide_index=True)
-
+    st.success("✅ Calculation completed! Review your salary breakdown above.")
     with st.expander("ℹ️ Assumptions & Tax Methodology"):
         st.write(
             "- IRPEF brackets: 23% up to €15k, 25% €15–28k, 35% €28–50k, 43% above €50k."
