@@ -3,77 +3,162 @@ import pandas as pd
 from tax import compute_net_from_gross
 
 
-st.set_page_config(page_title="Salary Calculator (Italy 2025)", layout="wide")
+st.set_page_config(page_title="Salary Calculator (Italy-2025)", layout="wide", page_icon="💶")
 
-st.title("💶 Salary net calculator — Italy (approx. 2025)")
+# Custom CSS for a professional dark theme
+st.markdown("""
+    <style>
+    .main {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .stApp {
+        background-color: #121212;
+    }
+    .stTitle {
+        color: #ffffff;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .stMarkdown {
+        color: #e0e0e0;
+    }
+    .stMetric {
+        background: linear-gradient(135deg, #333333 0%, #555555 100%);
+        color: #ffffff;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        text-align: center;
+    }
+    .stMetric label {
+        color: #ffffff !important;
+        font-size: 14px;
+    }
+    .stMetric .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+    .stMetric .metric-delta {
+        font-size: 12px;
+        color: #90ee90;
+    }
+    .stButton button {
+        background-color: #6200ea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    .stButton button:hover {
+        background-color: #3700b3;
+    }
+    .stExpander {
+        background-color: #1e1e1e;
+        border: 1px solid #333333;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        color: #ffffff;
+    }
+    .stDataFrame {
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+    .stProgress > div > div > div {
+        background-color: #ff6b6b;
+    }
+    .sidebar .sidebar-content {
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+    .stSelectbox, .stNumberInput {
+        border-radius: 8px;
+        background-color: #2c2c2c;
+        color: #ffffff;
+    }
+    .stSelectbox div, .stNumberInput input {
+        color: #ffffff !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.title("💶 Salary Calculator (Italy-2025)")
 st.markdown(
-    "Enter gross annual salary and optional rates. Use the sidebar to adjust values. This is an estimator for quick planning — consult a tax advisor for exact figures."
+    "Estimate your **Net Take-Home Pay** based on current Italian tax brackets and social security rates."
 )
 
 # Sidebar inputs for cleaner layout
 with st.sidebar.form(key="inputs"):
-    st.header("Inputs")
-    gross = st.number_input("Gross annual salary (EUR)", min_value=0.0, value=50000.0, step=500.0, format="%.2f")
-    social_rate = st.number_input("Employee social rate (fraction)", min_value=0.0, value=0.0919, step=0.001, format="%.4f")
-    regional_rate = st.number_input("Regional surtax (fraction)", min_value=0.0, value=0.01, step=0.001, format="%.4f")
-    municipal_rate = st.number_input("Municipal surtax (fraction)", min_value=0.0, value=0.0023, step=0.001, format="%.4f")
-    submitted = st.form_submit_button("Calculate")
+    st.header("⚙️ Configuration")
+    gross = st.number_input("Gross annual salary (EUR)", min_value=0.0, value=50000.0, step=1000.0, format="%.2f")
+    months = st.selectbox("Number of payments (months)", options=[12, 13, 14], index=1, help="In Italy, 13 or 14 payments are common (Tredicesima/Quattordicesima).")
+    
+    with st.expander("Advanced Tax Rates"):
+        social_rate = st.number_input("Employee social rate", min_value=0.0, value=0.0919, step=0.001, format="%.4f", help="INPS employee share")
+        regional_rate = st.number_input("Regional surtax", min_value=0.0, value=0.0100, step=0.001, format="%.4f")
+        municipal_rate = st.number_input("Municipal surtax", min_value=0.0, value=0.0023, step=0.001, format="%.4f")
+        
+    submitted = st.form_submit_button("Calculate My Salary 🚀", use_container_width=True)
 
-if submitted:
+# Calculation logic
+if submitted or 'initialized' not in st.session_state:
+    st.session_state.initialized = True
     result = compute_net_from_gross(gross, social_rate, regional_rate, municipal_rate)
-    monthly = {k: (v / 12 if isinstance(v, (int, float)) else v) for k, v in result.items()}
+    monthly = {k: (v / months if isinstance(v, (int, float)) else v) for k, v in result.items()}
 
-    # Top metrics
-    mcol1, mcol2, mcol3 = st.columns([1, 1, 1])
-    mcol1.metric("Gross (year)", f"€{result['gross']:,.2f}")
-    mcol2.metric("Net (year)", f"€{result['net']:,.2f}")
-    mcol3.metric("Net (month)", f"€{monthly['net']:,.2f}")
+    # Top metrics in a nice card-like layout
+    st.write("### 📊 Summary")
+    mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+    mcol1.metric("Annual Gross", f"€{result['gross']:,.0f}")
+    mcol2.metric("Annual Net", f"€{result['net']:,.0f}")
+    mcol3.metric(f"Monthly Net ({months}x)", f"€{monthly['net']:,.0f}")
+    mcol4.metric("Total Tax", f"€{result['total_tax']:,.0f}", delta=f"{(result['total_tax']/gross*100):.1f}%", delta_color="inverse")
 
-    # Visual breakdown: bar chart + progress
-    left, right = st.columns([2, 1])
-
-    # Prepare data for chart: yearly shares
-    shares = {
-        'Net': result['net'],
-        'Social': result['social'],
-        'IRPEF': result['irpef'],
-        'Local': result['local'],
-    }
-    df_shares = pd.DataFrame(list(shares.items()), columns=['Part', 'Amount'])
-
-    left.subheader("Annual distribution")
-    left.bar_chart(df_shares.set_index('Part'))
-
-    # show tax rate as a progress bar (percent of gross)
-    tax_share = (result['total_tax'] / result['gross']) if result['gross'] > 0 else 0
-    right.subheader("Tax burden")
-    right.metric("Total tax (yr)", f"€{result['total_tax']:,.2f}", delta=f"{tax_share*100:.1f}% of gross")
-    right.progress(min(1.0, tax_share))
+    st.divider()
 
     # Detailed table (year + month grouped)
-    breakdown = pd.DataFrame([
-        ["Gross (year)", result["gross"]],
-        ["Gross (month)", monthly["gross"]],
-        ["Social (year)", result["social"]],
-        ["Social (month)", monthly["social"]],
-        ["IRPEF (year)", result["irpef"]],
-        ["IRPEF (month)", monthly["irpef"]],
-        ["Regional+Municipal (year)", result["local"]],
-        ["Regional+Municipal (month)", monthly["local"]],
-        ["Total tax (year)", result["total_tax"]],
-        ["Total tax (month)", monthly["total_tax"]],
-        ["Net (year)", result["net"]],
-        ["Net (month)", monthly["net"]],
-    ], columns=["Item", "Amount (EUR)"])
+    st.subheader("📋 Detailed Breakdown")
+    
+    breakdown_data = {
+        "Category": ["Gross Salary", "Social Contributions (INPS)", "Taxable Income", "IRPEF (Income Tax)", "Regional/Municipal Tax", "Total Taxes", "Net Salary"],
+        "Annual (EUR)": [
+            result["gross"], result["social"], result["taxable"], result["irpef"], result["local"], result["total_tax"], result["net"]
+        ],
+        f"Monthly x{months} (EUR)": [
+            monthly["gross"], monthly["social"], monthly["taxable"], monthly["irpef"], monthly["local"], monthly["total_tax"], monthly["net"]
+        ]
+    }
+    
+    df_breakdown = pd.DataFrame(breakdown_data)
+    
+    # Format as currency
+    for col in ["Annual (EUR)", f"Monthly x{months} (EUR)"]:
+        df_breakdown[col] = df_breakdown[col].apply(lambda x: f"€ {x:,.2f}")
 
-    breakdown["Amount (EUR)"] = breakdown["Amount (EUR)"].apply(lambda x: f"€{x:,.2f}")
-    st.subheader("Breakdown")
-    st.table(breakdown.set_index("Item"))
+    st.dataframe(df_breakdown, use_container_width=True, hide_index=True)
 
-    with st.expander("Assumptions & notes"):
+    with st.expander("ℹ️ Assumptions & Tax Methodology"):
         st.write(
             "- IRPEF brackets: 23% up to €15k, 25% €15–28k, 35% €28–50k, 43% above €50k."
         )
         st.write("- Employee social rate default: 9.19% (configurable in sidebar).")
         st.write("- Regional & municipal surtaxes are estimated and configurable.")
         st.write("- This is an estimate for quick planning; consult a tax advisor for exact figures.")
+
+    # Professional footer
+    st.markdown("---")
+    st.markdown(
+        """
+        <div style="text-align: center; color: #888888; font-size: 12px;">
+        © 2025 Italy Salary Calculator | Built with ❤️ using Streamlit | For informational purposes only
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
