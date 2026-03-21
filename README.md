@@ -11,7 +11,7 @@ A simple Flask-based salary calculator.
 
 2. Run the app:
    ```bash
-   python src/main.py
+   python backend/main.py
    ```
 
 3. Test the API:
@@ -26,10 +26,10 @@ Build the Docker image:
 docker build -t salary-calculator:latest .
 ```
 
-You can run the Streamlit UI locally in a container:
+Run the containerized API locally:
 ```bash
-docker run --name salary-ui -d -p 8501:8501 salary-calculator:latest
-open http://localhost:8501
+docker run --name salary-api -d -p 5000:5000 salary-calculator:latest
+open http://localhost:5000
 ```
 
 ## API Usage

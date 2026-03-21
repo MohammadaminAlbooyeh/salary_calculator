@@ -5,7 +5,7 @@ Italian tax helper functions (simple model for 2025):
 - regional and municipal surcharges
 
 This module provides a transparent, configurable calculation used by the
-Streamlit UI. Rates and brackets are approximate and configurable from the UI.
+application. Rates and brackets are approximate and configurable.
 """
 
 from typing import Dict, List, Tuple
