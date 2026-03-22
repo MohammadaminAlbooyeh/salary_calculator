@@ -55,14 +55,20 @@ def calcola_netto_2025(ral, regione_aliquota=0.0173, comunale_aliquota=0.008):
     irpef_netta = max(irpef_lorda - detrazioni_tot, 0)
 
     # --- STEP 7: Regional and municipal surcharges (addizionali regionali e comunali) ---
-    addizionali = imponibile * (regione_aliquota + comunale_aliquota)
+    addizionale_regionale = imponibile * regione_aliquota
+    addizionale_comunale = imponibile * comunale_aliquota
+    addizionali = addizionale_regionale + addizionale_comunale
 
     # --- STEP 8: Total taxes and contributions (totale imposte e contributi) ---
     contributi = ral * inps_perc
+    contributi_employer = ral * 0.2381  # employer INPS share (approximate)
     imposte_tot = irpef_netta + addizionali
     trattenute_tot = contributi + imposte_tot
 
-    # --- STEP 9: Net amounts (netto) ---
+    # --- STEP 9: Effective total tax rate (incl. social contributions) ---
+    effective_tax_rate = (trattenute_tot / ral) * 100 if ral > 0 else 0
+
+    # --- STEP 10: Net amounts (netto) ---
     netto_annuo = ral - trattenute_tot
     netto_mensile_12 = netto_annuo / 12
     netto_mensile_13 = netto_annuo / 13
@@ -72,14 +78,18 @@ def calcola_netto_2025(ral, regione_aliquota=0.0173, comunale_aliquota=0.008):
         "Gross Annual Salary (RAL)": round(ral, 2),
         "IRPEF Taxable Base (imponibile IRPEF)": round(imponibile, 2),
         "INPS Contributions (contributi INPS)": round(contributi, 2),
+        "Employer INPS Share (quota datore)": round(contributi_employer, 2),
         "Gross IRPEF (IRPEF lorda)": round(irpef_lorda, 2),
         "Standard Deduction (detrazione ordinaria)": round(detrazione_ord, 2),
         "Additional Deduction (ulteriore detrazione)": round(detrazione_extra, 2),
         "Total Deductions (totale detrazioni)": round(detrazioni_tot, 2),
         "Net IRPEF (IRPEF netta)": round(irpef_netta, 2),
+        "Addizionale Regionale": round(addizionale_regionale, 2),
+        "Addizionale Comunale": round(addizionale_comunale, 2),
         "Surcharges (addizionali reg+com)": round(addizionali, 2),
         "Total Taxes (tasse totali IRPEF+addiz)": round(imposte_tot, 2),
         "Total Withholdings (totale trattenute)": round(trattenute_tot, 2),
+        "Effective Total Tax Rate (%)": round(effective_tax_rate, 2),
         "Annual Net Salary (netto annuo)": round(netto_annuo, 2),
         "Monthly Net (12 months - 12 mensilità)": round(netto_mensile_12, 2),
         "Monthly Net (13 months - 13 mensilità)": round(netto_mensile_13, 2)
