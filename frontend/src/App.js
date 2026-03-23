@@ -1,5 +1,5 @@
 import './App.css';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 
 function App() {
   const [salary, setSalary] = useState('');
