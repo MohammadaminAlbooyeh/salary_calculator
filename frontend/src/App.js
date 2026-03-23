@@ -37,7 +37,10 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch('http://56.228.42.29:5051/calculate', {
+      // In production (Vercel), we use the context relative path '/api' handled by vercel.json
+      // to avoid Mixed Content (HTTPS -> HTTP) and CORS issues.
+      const apiUrl = process.env.REACT_APP_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
