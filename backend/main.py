@@ -3,7 +3,7 @@ from flask_cors import CORS
 from salary_calculation import calcola_netto_2025
 
 app = Flask(__name__)
-CORS(app, origins=["https://salary-calculator-five-ecru.vercel.app"])
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/calculate', methods=['POST'])
 def calculate_salary():
