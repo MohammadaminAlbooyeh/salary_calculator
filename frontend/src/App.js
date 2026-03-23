@@ -37,7 +37,7 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch('http://localhost:5051/calculate', {
+      const response = await fetch('http://56.228.42.29:5051/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
