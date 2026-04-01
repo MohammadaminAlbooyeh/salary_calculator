@@ -3,3 +3,4 @@ pandas
 flask-cors
 gunicorn==20.1.0
 setuptools>=68.0.0
+wheel
