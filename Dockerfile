@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ .
 
-# Expose Flask port
+# Expose Flask/gunicorn port
 EXPOSE 5000
 
-# Default: run the Flask API
-CMD ["python", "main.py"]
+# Run with gunicorn for production
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "main:app"]
