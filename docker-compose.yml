@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  backend:
+    build: .
+    image: salary_calculator:latest
+    environment:
+      - PORT=10000
+    ports:
+      - "10000:10000"
+
+  frontend:
+    build: ./frontend
+    image: salary_frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

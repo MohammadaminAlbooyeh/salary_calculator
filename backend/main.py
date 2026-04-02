@@ -5,6 +5,16 @@ from salary_calculation import calcola_netto_2025
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({'status': 'ok', 'message': 'Salary Calculator API'}), 200
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok'}), 200
+
 @app.route('/calculate', methods=['POST'])
 def calculate_salary():
     data = request.get_json()
