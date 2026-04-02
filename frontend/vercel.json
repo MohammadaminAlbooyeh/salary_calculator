@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://56.228.42.29:5051/:path*"
+      "destination": "https://salary-calculator-l05q.onrender.com/:path*"
     }
   ]
 }
